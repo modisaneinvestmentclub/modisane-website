@@ -1,165 +1,77 @@
-// Mobile menu functionality
-function toggleMobileMenu() {
-    const mobileMenu = document.getElementById('mobileMenu');
-    const hamburger = document.querySelector('.hamburger');
+// ── Mobile menu ──────────────────────────────────────────────
 
-    if (mobileMenu.classList.contains('active')) {
-        mobileMenu.classList.remove('active');
-        hamburger.style.transform = 'rotate(0deg)';
-    } else {
-        mobileMenu.classList.add('active');
-        hamburger.style.transform = 'rotate(90deg)';
-    }
+const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+const mobileMenu    = document.getElementById('mobileMenu');
+
+function toggleMobileMenu() {
+    const open = mobileMenu.classList.toggle('open');
+    mobileMenuBtn.classList.toggle('open', open);
 }
 
 function closeMobileMenu() {
-    const mobileMenu = document.getElementById('mobileMenu');
-    const hamburger = document.querySelector('.hamburger');
-
-    mobileMenu.classList.remove('active');
-    hamburger.style.transform = 'rotate(0deg)';
+    mobileMenu.classList.remove('open');
+    mobileMenuBtn.classList.remove('open');
 }
 
-// Smooth scrolling for navigation links
-document.addEventListener('DOMContentLoaded', function() {
-    // Handle navigation link clicks
-    const navLinks = document.querySelectorAll('a[href^="#"]');
+mobileMenuBtn.addEventListener('click', toggleMobileMenu);
 
-    navLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-
-            const targetId = this.getAttribute('href');
-            const targetSection = document.querySelector(targetId);
-
-            if (targetSection) {
-                const headerHeight = 64; // Height of fixed header
-                const targetPosition = targetSection.offsetTop - headerHeight;
-
-                window.scrollTo({
-                    top: targetPosition,
-                    behavior: 'smooth'
-                });
-
-                // Close mobile menu if open
-                closeMobileMenu();
-            }
-        });
-    });
-
-    // Header background on scroll
-    const header = document.querySelector('.header');
-
-    window.addEventListener('scroll', function() {
-        if (window.scrollY > 50) {
-            header.style.background = 'rgba(255, 255, 255, 0.98)';
-            header.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
-        } else {
-            header.style.background = 'rgba(255, 255, 255, 0.95)';
-            header.style.boxShadow = 'none';
-        }
-    });
-
-    // Intersection Observer for fade-in animations
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-
-    const observer = new IntersectionObserver(function(entries) {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('fade-in');
-            }
-        });
-    }, observerOptions);
-
-    // Observe sections for animations
-    const sections = document.querySelectorAll('section');
-    sections.forEach(section => {
-        observer.observe(section);
-    });
-
-    // Observe cards for staggered animations
-    const cards = document.querySelectorAll('.stat-card, .value-card, .director-card, .contact-item');
-    cards.forEach((card, index) => {
-        setTimeout(() => {
-            observer.observe(card);
-        }, index * 100);
-    });
-});
-
-// Close mobile menu when clicking outside
-document.addEventListener('click', function(e) {
-    const mobileMenu = document.getElementById('mobileMenu');
-    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-    const header = document.querySelector('.header');
-
-    if (mobileMenu.classList.contains('active')) {
-        if (!header.contains(e.target)) {
-            closeMobileMenu();
-        }
+document.addEventListener('click', (e) => {
+    if (!mobileMenuBtn.contains(e.target) && !mobileMenu.contains(e.target)) {
+        closeMobileMenu();
     }
 });
 
-// Handle contact form interactions (if you add a contact form later)
-function handleContactForm(event) {
-    event.preventDefault();
-    // Add contact form handling logic here
-    alert('Thank you for your interest! We will contact you soon.');
-}
+// ── Header scroll state ───────────────────────────────────────
 
-// Add loading animation for images
-document.addEventListener('DOMContentLoaded', function() {
-    const images = document.querySelectorAll('img');
+const header = document.getElementById('header');
 
-    images.forEach(img => {
-        if (img.complete) {
-            img.classList.add('loaded');
-        } else {
-            img.addEventListener('load', function() {
-                this.classList.add('loaded');
-            });
-        }
-    });
-});
+window.addEventListener('scroll', () => {
+    header.classList.toggle('scrolled', window.scrollY > 20);
+}, { passive: true });
 
-// Add hover effects for interactive elements
-document.addEventListener('DOMContentLoaded', function() {
-    const buttons = document.querySelectorAll('.btn');
+// ── Active nav link on scroll ─────────────────────────────────
 
-    buttons.forEach(button => {
-        button.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-2px)';
-        });
+const sections = document.querySelectorAll('section[id]');
+const navLinks  = document.querySelectorAll('.nav-link');
 
-        button.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
-        });
-    });
-});
-
-// Add active state to navigation links based on scroll position
-window.addEventListener('scroll', function() {
-    const sections = document.querySelectorAll('section[id]');
-    const navLinks = document.querySelectorAll('.nav-link, .mobile-nav-link');
-
+window.addEventListener('scroll', () => {
     let current = '';
-
     sections.forEach(section => {
-        const sectionTop = section.offsetTop - 100;
-        const sectionHeight = section.clientHeight;
-
-        if (window.pageYOffset >= sectionTop &&
-            window.pageYOffset < sectionTop + sectionHeight) {
+        if (window.scrollY >= section.offsetTop - 100) {
             current = section.getAttribute('id');
         }
     });
-
     navLinks.forEach(link => {
-        link.classList.remove('active');
-        if (link.getAttribute('href') === `#${current}`) {
-            link.classList.add('active');
-        }
+        link.classList.toggle('active', link.getAttribute('href') === `#${current}`);
+    });
+}, { passive: true });
+
+// ── Smooth scroll ─────────────────────────────────────────────
+
+document.querySelectorAll('a[href^="#"]').forEach(link => {
+    link.addEventListener('click', (e) => {
+        const target = document.querySelector(link.getAttribute('href'));
+        if (!target) return;
+        e.preventDefault();
+        const headerHeight = parseInt(
+            getComputedStyle(document.documentElement).getPropertyValue('--header-h')
+        ) || 72;
+        window.scrollTo({ top: target.offsetTop - headerHeight, behavior: 'smooth' });
+        closeMobileMenu();
     });
 });
+
+// ── Scroll reveal ─────────────────────────────────────────────
+
+const revealEls = document.querySelectorAll('.reveal');
+
+const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            revealObserver.unobserve(entry.target);
+        }
+    });
+}, { threshold: 0.08, rootMargin: '0px 0px -36px 0px' });
+
+revealEls.forEach(el => revealObserver.observe(el));
