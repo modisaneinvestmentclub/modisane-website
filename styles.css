@@ -348,7 +348,7 @@ img { display: block; max-width: 100%; }
 
 .hero-title em {
     font-style: italic;
-    color: var(--teal);
+    color: var(--orange);
 }
 
 .hero-rule {
